@@ -290,13 +290,17 @@
     }
 
     .polaroid-inner img {
-      width: auto;
+      width: 100%;
       height: auto;
       max-width: 100%;
       display: block;
       margin: 0 auto;
+      opacity: 1;
+    }
+
+    .polaroid-inner:not(.loaded) img {
       opacity: 0;
-      transition: opacity 0.45s ease;
+      min-height: 40px;
     }
 
     .polaroid-inner img.loaded {
@@ -589,6 +593,109 @@
       .split, .graph-stage { grid-template-columns: 1fr; }
       .page::after { left: 48px; }
       .page-body { padding-left: 58px; }
+    }
+
+    /* ── Mobile / narrow screens ── */
+    @media (max-width: 768px) {
+      .reveal { font-size: 15px; }
+
+      .reveal h1 { font-size: 1.85em; }
+      .reveal h2 { font-size: 1.55em; }
+      .reveal p, .reveal li { font-size: 0.82em; line-height: 1.55; }
+
+      .reveal .slides section {
+        height: 100% !important;
+        top: 0 !important;
+      }
+
+      .page {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        border-radius: 12px;
+        filter: none;
+      }
+
+      .page-body {
+        justify-content: flex-start;
+        padding: 38px 14px 24px 38px;
+        min-height: min(100%, auto);
+      }
+
+      .page::after { left: 28px; }
+      .lab-tag {
+        left: 38px;
+        font-size: 0.42em;
+        max-width: calc(100% - 90px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .page-num { font-size: 0.95em; right: 12px; }
+
+      .page[data-accent="rust"] .page-body,
+      .page[data-accent="mustard"] .page-body,
+      .page[data-accent="teal"] .page-body {
+        padding-left: 34px;
+        border-left-width: 3px;
+      }
+
+      .split, .graph-stage {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .visual-stack { gap: 10px; }
+
+      .title-doodle, .margin-formula { display: none; }
+
+      .title-img {
+        width: 100%;
+        max-width: 100%;
+        transform: none;
+      }
+
+      .big-question {
+        font-size: 1.25em;
+        max-width: 100%;
+      }
+
+      .title-chips { gap: 6px; margin: 12px 0 6px; }
+      .chip { font-size: 0.55em; padding: 4px 10px; }
+
+      .polaroid {
+        transform: none !important;
+        padding: 8px 8px 22px;
+      }
+
+      .polaroid::before { width: 40px; height: 14px; }
+
+      .sketch-panel { padding: 6px; }
+      .mini-graph { height: 40px; }
+
+      .graph-page .page-body { padding-top: 38px; }
+      .graph-frame { padding: 8px; }
+      .graph-legend { grid-template-columns: 1fr; gap: 4px; }
+      .leg { font-size: 0.65em; }
+      .graph-side .polaroid { margin-top: 4px; }
+
+      .compare-grid { grid-template-columns: 1fr; }
+      .app-cards { gap: 10px; }
+
+      .tape-badge { font-size: 0.72em; padding: 5px 10px; }
+      .formula { font-size: 0.75em; padding: 6px 10px; }
+
+      .reveal .controls { opacity: 0.5; }
+      .reveal .slide-number { font-size: 13px; bottom: 8px; right: 8px; }
+    }
+
+    @media (max-width: 420px) {
+      .reveal { font-size: 13px; }
+      .reveal h1 { font-size: 1.65em; }
+      .reveal h2 { font-size: 1.35em; }
+      .page-body { padding: 36px 10px 20px 32px; }
+      .lab-tag { left: 32px; }
     }
   </style>
 </head>
@@ -1118,20 +1225,23 @@
     el.classList.remove('fragment', 'fade-up', 'fade-right', 'pop', 'visible');
   });
 
+  var isMobile = window.matchMedia('(max-width: 768px)').matches;
+
   Reveal.initialize({
     hash: true,
     slideNumber: 'c/t',
-    transition: 'slide',
+    transition: isMobile ? 'fade' : 'slide',
     transitionSpeed: 'default',
     backgroundTransition: 'fade',
     controls: true,
     progress: true,
     center: false,
-    width: 1100,
-    height: 700,
-    margin: 0.05,
-    minScale: 0.35,
-    maxScale: 1.5
+    touch: true,
+    width: isMobile ? 480 : 1100,
+    height: isMobile ? 680 : 700,
+    margin: isMobile ? 0.02 : 0.05,
+    minScale: 0.25,
+    maxScale: 1.0
   }).then(function () {
     handleGraphSlide(document.querySelector('[data-graph-slide="true"]'));
   });
@@ -1140,8 +1250,10 @@
     handleGraphSlide(e.currentSlide);
   });
 
-  /* Show placeholders until each image file actually loads */
+  /* Mark images loaded; fallback so mobile never stays blank */
   document.querySelectorAll('.polaroid-inner img').forEach(function (img) {
+    img.setAttribute('loading', 'eager');
+    img.setAttribute('decoding', 'async');
     function markLoaded() {
       img.classList.add('loaded');
       var wrap = img.closest('.polaroid-inner');
@@ -1155,6 +1267,9 @@
         var wrap = img.closest('.polaroid-inner');
         if (wrap) wrap.classList.remove('loaded');
       });
+      setTimeout(function () {
+        if (img.naturalWidth > 0) markLoaded();
+      }, 2500);
     }
   });
 </script>
