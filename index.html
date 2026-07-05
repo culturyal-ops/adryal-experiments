@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resistance Variation with Temperature — Physics Lab</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Kalam:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+
+  <style>
+    svg#rough-filter-svg { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+    :root {
+      --cream:    #f5f1e8;
+      --paper:    #faf6ee;
+      --ink:      #1a1a18;
+      --teal:     #4a7c7c;
+      --mustard:  #c9a227;
+      --rust:     #b5533c;
+      --muted:    #6b6560;
+      --margin-r: #c47070;
+      --hand-r:   255px 15px 225px 15px / 15px 225px 15px 255px;
+    }
+
+    * { box-sizing: border-box; }
+
+    .reveal-viewport {
+      background: var(--cream);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    }
+
+    .reveal {
+      font-family: 'Space Mono', monospace;
+      font-size: 21px;
+      color: var(--ink);
+    }
+
+    .reveal .slides { text-align: left; }
+
+    .reveal .slides section {
+      background: transparent;
+      padding: 0;
+      height: 100%;
+    }
+
+    /* ── Notebook page shell ── */
+    .page {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: var(--hand-r);
+      filter: url(#rough-border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        transparent 0px, transparent 27px,
+        rgba(74, 124, 124, 0.09) 27px, rgba(74, 124, 124, 0.09) 28px
+      );
+      background-position: 0 72px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0; left: 62px;
+      width: 2px;
+      background: var(--margin-r);
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-body {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      padding: 28px 36px 28px 82px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .page-num {
+      position: absolute;
+      top: 14px; right: 22px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.1em;
+      color: var(--muted);
+      z-index: 2;
+      transform: rotate(2deg);
+    }
+
+    .lab-tag {
+      position: absolute;
+      top: 12px; left: 78px;
+      font-size: 0.48em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      z-index: 2;
+      border-bottom: 2px solid var(--mustard);
+      padding-bottom: 2px;
+    }
+
+    /* ── Typography ── */
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: none;
+      line-height: 1.1;
+      margin: 0 0 0.35em;
+    }
+
+    .reveal h1 { font-size: 2.85em; letter-spacing: -0.01em; }
+    .reveal h2 { font-size: 2.15em; }
+    .reveal h3 { font-family: 'Kalam', cursive; font-size: 1.05em; font-weight: 700; }
+
+    .reveal p, .reveal li {
+      font-size: 0.74em;
+      line-height: 1.7;
+    }
+
+    .sketch-line {
+      display: block;
+      height: 3px;
+      width: 0;
+      background: var(--ink);
+      border-radius: 2px;
+      margin: 6px 0 14px;
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal .present .sketch-line,
+    .reveal .slides section.present .sketch-line { width: 120px; }
+    .sketch-line.wide.present-target { width: 200px; }
+
+    .accent-teal    { color: var(--teal); }
+    .accent-mustard { color: var(--mustard); }
+    .accent-rust    { color: var(--rust); }
+
+    .mark {
+      position: relative;
+      display: inline;
+    }
+    .mark::after {
+      content: '';
+      position: absolute;
+      left: -2px; right: -2px; bottom: 1px;
+      height: 0.38em;
+      opacity: 0.35;
+      z-index: -1;
+      border-radius: 2px;
+    }
+    .mark-teal::after    { background: var(--teal); }
+    .mark-mustard::after { background: var(--mustard); }
+    .mark-rust::after    { background: var(--rust); }
+
+    /* ── Lists ── */
+    .reveal ul { list-style: none; padding: 0; margin: 0.4em 0; }
+    .reveal ul li {
+      padding: 0.35em 0 0.35em 1.6em;
+      position: relative;
+      border-left: 2px solid transparent;
+      margin-left: 4px;
+      transition: border-color 0.3s;
+    }
+    .reveal ul li.visible { border-left-color: rgba(26,26,24,0.12); }
+    .reveal ul li::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0.72em;
+      width: 10px; height: 10px;
+      border: 2px solid var(--ink);
+      border-radius: 50% 40% 55% 35% / 45% 55% 40% 50%;
+      background: var(--paper);
+    }
+    .reveal ul li.visible::before { background: var(--teal); border-color: var(--teal); }
+
+    /* ── Formula cards ── */
+    .formula {
+      display: inline-block;
+      font-size: 0.7em;
+      padding: 8px 14px;
+      margin: 0.5em 0;
+      background: rgba(255,255,255,0.55);
+      border: 1.5px solid var(--ink);
+      border-radius: 4px 14px 6px 12px / 12px 6px 14px 4px;
+      box-shadow: 3px 3px 0 rgba(26,26,24,0.08);
+      transform: rotate(-0.4deg);
+    }
+
+    /* ── Tape badge ── */
+    .tape-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.68em;
+      font-weight: 700;
+      padding: 6px 16px;
+      margin-top: 0.5em;
+      background: rgba(201, 162, 39, 0.18);
+      border: 1.5px dashed var(--mustard);
+      transform: rotate(-1.2deg);
+      position: relative;
+    }
+    .tape-badge::before, .tape-badge::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      width: 28px; height: 12px;
+      background: rgba(245, 241, 232, 0.7);
+      border: 1px solid rgba(26,26,24,0.15);
+      opacity: 0.85;
+    }
+    .tape-badge::before { left: 12px; transform: rotate(-8deg); }
+    .tape-badge::after  { right: 12px; transform: rotate(6deg); }
+
+    .trend-arrow {
+      font-family: 'Caveat', cursive;
+      font-size: 1.6em;
+      line-height: 1;
+      display: inline-block;
+    }
+    .trend-up   { color: var(--rust); transform: rotate(-15deg); }
+    .trend-flat { color: var(--mustard); }
+    .trend-down { color: var(--teal); transform: rotate(15deg); }
+
+    /* ── Layout ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 28px;
+      align-items: start;
+      flex: 1;
+      margin-top: 6px;
+      min-height: 0;
+    }
+
+    .visual-stack { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Image frame (polaroid) ── */
+    .polaroid {
+      width: 100%;
+      padding: 10px 10px 28px;
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 3px 8px 5px 6px / 6px 5px 8px 3px;
+      box-shadow: 4px 6px 14px rgba(26,26,24,0.12);
+      transform: rotate(1.2deg);
+      position: relative;
+    }
+    .polaroid:nth-child(even) { transform: rotate(-0.8deg); }
+
+    .polaroid::before {
+      content: '';
+      position: absolute;
+      top: -10px; left: 50%;
+      transform: translateX(-50%) rotate(1deg);
+      width: 52px; height: 18px;
+      background: rgba(201,162,39,0.35);
+      border: 1px solid rgba(26,26,24,0.12);
+    }
+
+    .polaroid-inner {
+      width: 100%;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: rgba(245,241,232,0.6);
+      border: 1px dashed rgba(26,26,24,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .polaroid-inner img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    .polaroid-inner img.loaded {
+      opacity: 1;
+    }
+
+    .polaroid-inner.loaded {
+      border-style: solid;
+      border-color: rgba(26, 26, 24, 0.2);
+      background: #fff;
+    }
+
+    .polaroid-inner.loaded .polaroid-cap { display: none; }
+
+    .polaroid-cap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: 'Caveat', cursive;
+      font-size: 0.85em;
+      color: var(--muted);
+      padding: 12px;
+      pointer-events: none;
+    }
+
+    /* ── Inline sketch panels ── */
+    .sketch-panel {
+      padding: 10px;
+      border: 2px solid var(--ink);
+      border-radius: 8px 18px 10px 14px / 14px 10px 18px 8px;
+      background: rgba(255,255,255,0.45);
+    }
+    .sketch-panel svg { width: 100%; height: auto; display: block; }
+
+    .mini-graph {
+      height: 52px;
+      position: relative;
+      border-left: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      margin-top: 4px;
+    }
+    .mini-graph svg {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* ── Title slide ── */
+    .title-page .page-body {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px 0 8px;
+    }
+
+    .chip {
+      font-family: 'Kalam', cursive;
+      font-size: 0.62em;
+      padding: 5px 14px;
+      border: 2px solid var(--ink);
+      border-radius: 20px 6px 18px 8px / 8px 18px 6px 20px;
+      transform: rotate(var(--rot, 0deg));
+    }
+    .chip-rust    { --rot: -2deg; border-color: var(--rust); color: var(--rust); }
+    .chip-mustard { --rot: 1.5deg; border-color: var(--mustard); color: var(--mustard); }
+    .chip-teal    { --rot: -1deg; border-color: var(--teal); color: var(--teal); }
+    .chip-ink     { --rot: 2deg; }
+
+    .big-question {
+      font-family: 'Caveat', cursive;
+      font-size: 1.55em;
+      color: var(--rust);
+      max-width: 85%;
+      margin: 16px auto 0;
+      line-height: 1.25;
+      transform: rotate(-0.5deg);
+    }
+
+    .title-doodle {
+      position: absolute;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .title-doodle.left  { left: 70px; top: 50%; transform: translateY(-50%); width: 90px; }
+    .title-doodle.right { right: 30px; top: 20%; width: 110px; }
+
+    .title-img { width: 48%; margin-top: 10px; transform: rotate(-1deg); }
+
+    /* ── Material accent bar ── */
+    .page[data-accent="rust"]    .lab-tag { border-color: var(--rust); color: var(--rust); }
+    .page[data-accent="mustard"] .lab-tag { border-color: var(--mustard); color: var(--mustard); }
+    .page[data-accent="teal"]    .lab-tag { border-color: var(--teal); color: var(--teal); }
+
+    .page[data-accent="rust"] .page-body { border-left: 5px solid rgba(181,83,60,0.25); margin-left: 0; padding-left: 77px; }
+    .page[data-accent="mustard"] .page-body { border-left: 5px solid rgba(201,162,39,0.3); padding-left: 77px; }
+    .page[data-accent="teal"] .page-body { border-left: 5px solid rgba(74,124,124,0.3); padding-left: 77px; }
+
+    /* ── Graph slide ── */
+    .graph-page .page-body { padding-top: 18px; }
+
+    .graph-stage {
+      display: grid;
+      grid-template-columns: 1.4fr 0.85fr;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .graph-frame {
+      padding: 14px;
+      background: #fff;
+      border: 2.5px solid var(--ink);
+      border-radius: 6px 16px 8px 14px / 14px 8px 16px 6px;
+      box-shadow: 5px 5px 0 rgba(74,124,124,0.15);
+    }
+
+    .graph-frame svg { width: 100%; height: auto; display: block; }
+
+    .graph-axis { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+    .graph-grid { stroke: var(--ink); stroke-width: 0.4; opacity: 0.15; }
+
+    .graph-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+    .graph-legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.58em;
+      padding: 5px 8px;
+      border: 1.5px solid transparent;
+      border-radius: 6px;
+      transition: background 0.4s, border-color 0.4s, transform 0.3s;
+    }
+    .leg.active {
+      background: rgba(255,255,255,0.7);
+      border-color: var(--ink);
+      transform: scale(1.03);
+    }
+    .leg-swatch { width: 22px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+
+    .graph-side { font-size: 0.66em; display: flex; flex-direction: column; gap: 10px; }
+
+    .insight-card {
+      padding: 10px 12px;
+      border: 1.5px solid var(--ink);
+      border-radius: 10px 4px 12px 6px / 6px 12px 4px 10px;
+      background: rgba(255,255,255,0.4);
+    }
+
+    /* ── Applications cards ── */
+    .app-cards { display: flex; flex-direction: column; gap: 14px; }
+
+    .app-card {
+      padding: 12px 14px;
+      border: 2px solid var(--ink);
+      border-radius: 12px 5px 10px 8px / 8px 10px 5px 12px;
+      background: rgba(255,255,255,0.35);
+      position: relative;
+    }
+    .app-card h3 { margin-bottom: 0.2em; }
+
+    .app-card.teal-card  { box-shadow: 4px 4px 0 rgba(74,124,124,0.2); }
+    .app-card.rust-card  { box-shadow: 4px 4px 0 rgba(181,83,60,0.2); }
+
+    /* ── Summary grid ── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 8px 0 12px;
+      font-size: 0.62em;
+    }
+
+    .compare-cell {
+      padding: 8px 10px;
+      border: 1.5px solid var(--ink);
+      border-radius: 8px 4px 10px 5px / 5px 10px 4px 8px;
+      background: rgba(255,255,255,0.45);
+    }
+    .compare-cell strong {
+      font-family: 'Kalam', cursive;
+      font-size: 1.15em;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .viva-scroll {
+      padding: 12px 14px;
+      border: 2px solid var(--rust);
+      border-radius: 14px 6px 12px 8px / 8px 12px 6px 14px;
+      background: rgba(181,83,60,0.06);
+      position: relative;
+    }
+    .viva-scroll::before {
+      content: 'VIVA';
+      position: absolute;
+      top: -11px; left: 16px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.1em;
+      background: var(--paper);
+      padding: 0 8px;
+      color: var(--rust);
+    }
+    .viva-scroll h3 { color: var(--rust); font-size: 1.2em; margin-bottom: 0.2em; }
+    .viva-scroll li::before { border-color: var(--rust) !important; }
+    .viva-scroll li.visible::before { background: var(--rust) !important; }
+
+    /* ── Decorative margin formulas ── */
+    .margin-formula {
+      position: absolute;
+      right: 16px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.3em;
+      color: var(--muted);
+      opacity: 0.22;
+      transform: rotate(90deg);
+      transform-origin: right center;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── reveal overrides ── */
+    .reveal .progress { height: 5px; background: rgba(26,26,24,0.1); }
+    .reveal .progress span {
+      background: repeating-linear-gradient(
+        90deg, var(--teal) 0 8px, var(--mustard) 8px 16px, var(--rust) 16px 24px
+      );
+    }
+    .reveal .controls { color: var(--ink); opacity: 0.3; }
+    .reveal .controls:hover { opacity: 0.75; }
+    .reveal .slide-number {
+      font-family: 'Caveat', cursive;
+      font-size: 16px;
+      color: var(--muted);
+      background: transparent;
+    }
+
+    /* ── Custom fragments ── */
+    .reveal .slides section .fragment {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .reveal .slides section .fragment.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .reveal .slides section .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1), visibility 0.45s;
+    }
+    .reveal .slides section .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+    .reveal .slides section .fragment.fade-right {
+      transform: translateX(-16px);
+      transition: opacity 0.45s ease, transform 0.45s ease, visibility 0.45s;
+    }
+    .reveal .slides section .fragment.fade-right.visible {
+      transform: translateX(0);
+    }
+    .reveal .slides section .fragment.pop {
+      transform: scale(0.92);
+      transition: opacity 0.35s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1), visibility 0.35s;
+    }
+    .reveal .slides section .fragment.pop.visible {
+      transform: scale(1);
+    }
+
+    /* ── SVG animations ── */
+    @keyframes wiggle {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(3px); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { r: 4; opacity: 1; }
+      50%      { r: 6; opacity: 0.6; }
+    }
+    @keyframes drift {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+
+    .phonon-line { animation: wiggle 1.2s ease-in-out infinite; transform-origin: center; }
+    .electron-dot { animation: drift 2s ease-in-out infinite; }
+    .present .title-doodle path { stroke-dashoffset: 0; }
+
+    .doodle-path {
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+      transition: stroke-dashoffset 1.4s ease 0.3s;
+    }
+    .reveal .slides section.present .doodle-path { stroke-dashoffset: 0; }
+
+    @media (max-width: 900px) {
+      .split, .graph-stage { grid-template-columns: 1fr; }
+      .page::after { left: 48px; }
+      .page-body { padding-left: 58px; }
+    }
+  </style>
+</head>
+<body>
+
+<svg id="rough-filter-svg" aria-hidden="true">
+  <defs>
+    <filter id="rough-border" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="4" result="noise" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- SLIDE 1 · TITLE -->
+    <section class="title-page" data-background-color="#f5f1e8">
+      <div class="page">
+        <span class="page-num">Exp. Note · 01</span>
+        <span class="lab-tag">Physics Lab · Thermal Resistivity</span>
+
+        <svg class="title-doodle left" viewBox="0 0 80 120" aria-hidden="true">
+          <path class="doodle-path" d="M10 100 Q40 60 20 30 Q50 10 70 40" fill="none" stroke="#1a1a18" stroke-width="2"/>
+          <circle cx="20" cy="30" r="5" fill="none" stroke="#b5533c" stroke-width="1.5"/>
+          <text x="8" y="115" font-family="Caveat" font-size="14" fill="#6b6560">R(Ω)</text>
+        </svg>
+        <svg class="title-doodle right" viewBox="0 0 100 80" aria-hidden="true">
+          <path class="doodle-path" d="M10 70 L90 70 M10 70 L10 10" fill="none" stroke="#1a1a18" stroke-width="1.5"/>
+          <path class="doodle-path" d="M10 50 Q30 45 50 35 T90 15" fill="none" stroke="#4a7c7c" stroke-width="2"/>
+        </svg>
+
+        <div class="page-body">
+          <p class="fragment fade-up" style="font-size:0.55em; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin:0;">Undergraduate Physics Laboratory</p>
+          <h1 class="fragment fade-up">Comparison of Resistance<br>Variation with Temperature</h1>
+          <span class="sketch-line fragment fade-up" style="margin:8px auto 14px;"></span>
+          <p class="fragment fade-up" style="font-size:0.68em; color:var(--muted); max-width:78%; margin:0 auto;">Carbon Film Resistor · Metal Wire · Semiconductor · Thermistor</p>
+
+          <div class="title-chips">
+            <span class="chip chip-rust fragment pop">Metal ↑ PTC</span>
+            <span class="chip chip-mustard fragment pop">Carbon ≈ 0</span>
+            <span class="chip chip-teal fragment pop">Semiconductor ↓</span>
+            <span class="chip chip-ink fragment pop">Thermistor ↓↓</span>
+          </div>
+
+          <p class="big-question fragment fade-up">Why does resistance respond so differently to temperature?</p>
+
+          <div class="polaroid title-img fragment fade-up">
+            <div class="polaroid-inner">
+              <img src="images/slide-1.png" alt="Experiment setup">
+              <span class="polaroid-cap">images/slide-1.png</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2 · METAL WIRE -->
+    <section data-background-color="#f5f1e8">
+      <div class="page" data-accent="rust">
+        <span class="page-num">02 · Metal</span>
+        <span class="lab-tag">Electron–Phonon Scattering</span>
+        <span class="margin-formula" style="top:45%;">R = ρL/A</span>
+
+        <div class="page-body">
+          <h2><span class="accent-rust">Metal Wire</span> <span class="trend-arrow trend-up">↗ R↑</span></h2>
+          <span class="sketch-line" style="background:var(--rust);"></span>
+          <p style="font-size:0.62em; color:var(--muted); margin:0 0 8px;">Positive Temperature Coefficient · α &gt; 0</p>
+
+          <div class="split">
+            <div>
+              <ul>
+                <li class="fragment fade-up">Conduction electrons drift through a lattice of fixed positive ions.</li>
+                <li class="fragment fade-up">Heating intensifies <span class="mark mark-rust">lattice vibrations (phonons)</span> — ions shake harder.</li>
+                <li class="fragment fade-up">More frequent collisions → shorter mean free path → <span class="mark mark-teal">electron–phonon scattering</span>.</li>
+                <li class="fragment fade-up">Resistivity climbs → <strong class="accent-rust">resistance rises with T</strong>.</li>
+                <li class="fragment fade-up"><span class="formula">R(T) ≈ R₀[1 + α(T − T₀)]</span></li>
+              </ul>
+              <div class="tape-badge fragment pop"><span class="trend-arrow trend-up">↗</span> α &gt; 0 · PTC</div>
+            </div>
+
+            <div class="visual-stack">
+              <div class="sketch-panel fragment fade-right">
+                <svg viewBox="0 0 280 100" aria-label="Phonon scattering sketch">
+                  <line x1="20" y1="80" x2="260" y2="80" stroke="#1a1a18" stroke-width="1.5"/>
+                  <line x1="40" y1="80" x2="40" y2="55" stroke="#b5533c" stroke-width="2" class="phonon-line"/>
+                  <line x1="80" y1="80" x2="75" y2="50" stroke="#b5533c" stroke-width="2" class="phonon-line" style="animation-delay:0.2s"/>
+                  <line x1="120" y1="80" x2="125" y2="52" stroke="#b5533c" stroke-width="2" class="phonon-line" style="animation-delay:0.4s"/>
+                  <line x1="160" y1="80" x2="155" y2="48" stroke="#b5533c" stroke-width="2" class="phonon-line" style="animation-delay:0.1s"/>
+                  <line x1="200" y1="80" x2="205" y2="54" stroke="#b5533c" stroke-width="2" class="phonon-line" style="animation-delay:0.3s"/>
+                  <circle class="electron-dot" cx="60" cy="65" r="5" fill="#4a7c7c"/>
+                  <path d="M60 65 Q100 40 140 70" fill="none" stroke="#4a7c7c" stroke-width="1.5" stroke-dasharray="4 3"/>
+                  <text x="20" y="20" font-family="Caveat" font-size="16" fill="#b5533c">phonons</text>
+                  <text x="180" y="25" font-family="Caveat" font-size="14" fill="#4a7c7c">e⁻ scattered</text>
+                </svg>
+              </div>
+              <div class="mini-graph fragment fade-up">
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                  <path d="M0 40 L200 12" fill="none" stroke="#b5533c" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="polaroid fragment fade-up">
+                <div class="polaroid-inner">
+                  <img src="images/slide-2.png" alt="Metal wire diagram">
+                  <span class="polaroid-cap">images/slide-2.png</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3 · CARBON FILM -->
+    <section data-background-color="#f5f1e8">
+      <div class="page" data-accent="mustard">
+        <span class="page-num">03 · Carbon</span>
+        <span class="lab-tag">Grain-Boundary Conduction</span>
+
+        <div class="page-body">
+          <h2><span class="accent-mustard">Carbon Film</span> <span class="trend-arrow trend-flat">→ R≈</span></h2>
+          <span class="sketch-line" style="background:var(--mustard);"></span>
+          <p style="font-size:0.62em; color:var(--muted); margin:0 0 8px;">Near-Zero Coefficient · α ≈ 0</p>
+
+          <div class="split">
+            <div>
+              <ul>
+                <li class="fragment fade-up">Thin carbon layer on a ceramic core — cheap, stable, common in circuits.</li>
+                <li class="fragment fade-up"><span class="mark mark-mustard">π-electrons hop</span> between carbon grains at boundaries.</li>
+                <li class="fragment fade-up">Phonon scattering increases with T — but grain effects partially cancel it.</li>
+                <li class="fragment fade-up">Net: <strong class="accent-mustard">α ≈ 0 or slightly negative</strong> — R barely budges.</li>
+                <li class="fragment fade-up">|α| is orders of magnitude smaller than pure metals.</li>
+              </ul>
+              <div class="tape-badge fragment pop" style="background:rgba(201,162,39,0.12); border-color:var(--mustard);">
+                <span class="trend-arrow trend-flat">→</span> α ≈ −50 to −200 ppm/°C
+              </div>
+            </div>
+
+            <div class="visual-stack">
+              <div class="sketch-panel fragment fade-right">
+                <svg viewBox="0 0 280 90" aria-label="Carbon grain hopping">
+                  <rect x="20" y="30" width="50" height="35" rx="3" fill="none" stroke="#1a1a18" stroke-width="1.5" transform="rotate(-2 45 47)"/>
+                  <rect x="75" y="28" width="48" height="38" rx="3" fill="none" stroke="#1a1a18" stroke-width="1.5"/>
+                  <rect x="130" y="32" width="52" height="34" rx="3" fill="none" stroke="#1a1a18" stroke-width="1.5" transform="rotate(1 156 49)"/>
+                  <rect x="188" y="29" width="50" height="36" rx="3" fill="none" stroke="#1a1a18" stroke-width="1.5"/>
+                  <path d="M70 48 Q72 20 78 48" fill="none" stroke="#c9a227" stroke-width="2" stroke-dasharray="3 2"/>
+                  <path d="M123 46 Q125 18 131 46" fill="none" stroke="#c9a227" stroke-width="2" stroke-dasharray="3 2"/>
+                  <path d="M180 47 Q182 15 190 47" fill="none" stroke="#c9a227" stroke-width="2" stroke-dasharray="3 2"/>
+                  <text x="20" y="82" font-family="Caveat" font-size="14" fill="#c9a227">electron hopping</text>
+                </svg>
+              </div>
+              <div class="mini-graph fragment fade-up">
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                  <path d="M0 28 Q100 30 200 27" fill="none" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="polaroid fragment fade-up">
+                <div class="polaroid-inner">
+                  <img src="images/slide-3.png" alt="Carbon film resistor">
+                  <span class="polaroid-cap">images/slide-3.png</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4 · SEMICONDUCTOR -->
+    <section data-background-color="#f5f1e8">
+      <div class="page" data-accent="teal">
+        <span class="page-num">04 · Semi</span>
+        <span class="lab-tag">Band-Gap Physics</span>
+        <span class="margin-formula" style="top:50%;">n ∝ e^(−Eg/2kT)</span>
+
+        <div class="page-body">
+          <h2><span class="accent-teal">Semiconductor</span> <span class="trend-arrow trend-down">↘ R↓</span></h2>
+          <span class="sketch-line" style="background:var(--teal);"></span>
+          <p style="font-size:0.62em; color:var(--muted); margin:0 0 8px;">Negative Temperature Coefficient · α &lt; 0</p>
+
+          <div class="split">
+            <div>
+              <ul>
+                <li class="fragment fade-up">A <span class="mark mark-teal">band gap E<sub>g</sub></span> separates valence and conduction bands.</li>
+                <li class="fragment fade-up">Cold → few carriers cross the gap → <em>high</em> resistivity.</li>
+                <li class="fragment fade-up">Heat supplies kT → electrons jump E<sub>g</sub> → <strong class="accent-teal">carrier density n surges</strong>.</li>
+                <li class="fragment fade-up">Extra carriers outweigh increased scattering.</li>
+                <li class="fragment fade-up"><span class="formula">ρ(T) ∝ e^(E<sub>g</sub>/2kT)</span></li>
+              </ul>
+              <div class="tape-badge fragment pop" style="background:rgba(74,124,124,0.12); border-color:var(--teal);">
+                <span class="trend-arrow trend-down">↘</span> α &lt; 0 · NTC
+              </div>
+            </div>
+
+            <div class="visual-stack">
+              <div class="sketch-panel fragment fade-right">
+                <svg viewBox="0 0 280 110" aria-label="Band gap diagram">
+                  <rect x="30" y="15" width="90" height="80" fill="none" stroke="#1a1a18" stroke-width="1.5" rx="4"/>
+                  <rect x="160" y="15" width="90" height="80" fill="none" stroke="#1a1a18" stroke-width="1.5" rx="4"/>
+                  <text x="55" y="12" font-family="Caveat" font-size="13" fill="#6b6560">Valence</text>
+                  <text x="178" y="12" font-family="Caveat" font-size="13" fill="#6b6560">Conduction</text>
+                  <rect x="35" y="55" width="80" height="35" fill="rgba(74,124,124,0.15)" stroke="#4a7c7c" stroke-width="1"/>
+                  <path d="M120 72 L160 72" stroke="#c9a227" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <text x="118" y="65" font-family="Caveat" font-size="14" fill="#c9a227">E_g</text>
+                  <circle cx="175" cy="35" r="5" fill="#4a7c7c" class="electron-dot"/>
+                  <text x="188" y="38" font-family="Caveat" font-size="13" fill="#4a7c7c">e⁻ promoted</text>
+                  <defs>
+                    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                      <polygon points="0 0, 8 3, 0 6" fill="#c9a227"/>
+                    </marker>
+                  </defs>
+                </svg>
+              </div>
+              <div class="mini-graph fragment fade-up">
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                  <path d="M0 8 C60 12 120 28 200 42" fill="none" stroke="#4a7c7c" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="polaroid fragment fade-up">
+                <div class="polaroid-inner">
+                  <img src="images/slide-4.png" alt="Band gap diagram">
+                  <span class="polaroid-cap">images/slide-4.png</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5 · THERMISTOR -->
+    <section data-background-color="#f5f1e8">
+      <div class="page" data-accent="rust">
+        <span class="page-num">05 · NTC</span>
+        <span class="lab-tag">Engineered Sensitivity</span>
+
+        <div class="page-body">
+          <h2><span class="accent-rust">Thermistor</span> (NTC) <span class="trend-arrow trend-down" style="font-size:2em;">↘↘</span></h2>
+          <span class="sketch-line" style="background:var(--rust);"></span>
+          <p style="font-size:0.62em; color:var(--muted); margin:0 0 8px;">Exponential Resistance Drop</p>
+
+          <div class="split">
+            <div>
+              <ul>
+                <li class="fragment fade-up">Semiconductor ceramic (metal oxides) — <em>designed</em> for huge α.</li>
+                <li class="fragment fade-up"><span class="mark mark-rust">Thermal carrier generation</span> dominates everything else.</li>
+                <li class="fragment fade-up">n rises exponentially → resistance <strong>plummets</strong> with T.</li>
+                <li class="fragment fade-up"><span class="formula">R(T) = R₀ · e<sup>β(1/T − 1/T₀)</sup></span></li>
+                <li class="fragment fade-up">Far more sensitive than ordinary semiconductors — built to sense temperature.</li>
+              </ul>
+              <div class="tape-badge fragment pop"><span class="trend-arrow trend-down">↘↘</span> β ≈ 3000–5000 K</div>
+            </div>
+
+            <div class="visual-stack">
+              <div class="sketch-panel fragment fade-right">
+                <svg viewBox="0 0 280 90" aria-label="Thermistor component sketch">
+                  <ellipse cx="140" cy="45" rx="55" ry="30" fill="rgba(181,83,60,0.1)" stroke="#1a1a18" stroke-width="2"/>
+                  <line x1="85" y1="45" x2="40" y2="45" stroke="#1a1a18" stroke-width="2"/>
+                  <line x1="195" y1="45" x2="240" y2="45" stroke="#1a1a18" stroke-width="2"/>
+                  <path d="M100 30 Q140 55 180 25" fill="none" stroke="#b5533c" stroke-width="1.5" stroke-dasharray="4 3"/>
+                  <text x="115" y="52" font-family="Caveat" font-size="16" fill="#b5533c">NTC</text>
+                  <text x="30" y="75" font-family="Caveat" font-size="13" fill="#6b6560">T↑ → R↓↓</text>
+                </svg>
+              </div>
+              <div class="mini-graph fragment fade-up">
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                  <path d="M0 5 C40 6 80 20 130 38 C160 44 180 46 200 47" fill="none" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+                </svg>
+              </div>
+              <div class="polaroid fragment fade-up">
+                <div class="polaroid-inner">
+                  <img src="images/slide-5.png" alt="NTC thermistor">
+                  <span class="polaroid-cap">images/slide-5.png</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6 · GRAPH -->
+    <section class="graph-page" data-background-color="#f5f1e8" data-graph-slide="true">
+      <div class="page">
+        <span class="page-num">06 · Data</span>
+        <span class="lab-tag">Comparative Plot</span>
+
+        <div class="page-body">
+          <h2>All Four on One Graph — <span class="mark mark-teal">R vs T</span></h2>
+          <span class="sketch-line wide" style="background:var(--teal); margin-bottom:10px;"></span>
+
+          <div class="graph-stage">
+            <div>
+              <div class="graph-frame">
+                <svg viewBox="0 0 520 340" xmlns="http://www.w3.org/2000/svg" aria-label="Resistance versus temperature">
+                  <!-- Grid -->
+                  <line class="graph-grid" x1="168" y1="30" x2="168" y2="290"/>
+                  <line class="graph-grid" x1="275" y1="30" x2="275" y2="290"/>
+                  <line class="graph-grid" x1="383" y1="30" x2="383" y2="290"/>
+                  <line class="graph-grid" x1="60" y1="160" x2="490" y2="160" stroke="#1a1a18" stroke-width="0.4" opacity="0.12"/>
+                  <line class="graph-grid" x1="60" y1="225" x2="490" y2="225" stroke="#1a1a18" stroke-width="0.4" opacity="0.12"/>
+
+                  <!-- Axes (animated) -->
+                  <line class="graph-axis graph-axis-line" x1="60" y1="290" x2="490" y2="290"/>
+                  <line class="graph-axis graph-axis-line" x1="60" y1="290" x2="60" y2="30"/>
+
+                  <text x="275" y="325" text-anchor="middle" font-family="Space Mono" font-size="11" fill="#6b6560">Temperature T (°C)</text>
+                  <text x="22" y="165" text-anchor="middle" font-family="Space Mono" font-size="11" fill="#6b6560" transform="rotate(-90 22 165)">Resistance R (Ω)</text>
+
+                  <text x="60"  y="308" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#6b6560">0</text>
+                  <text x="168" y="308" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#6b6560">50</text>
+                  <text x="275" y="308" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#6b6560">100</text>
+                  <text x="383" y="308" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#6b6560">150</text>
+                  <text x="490" y="308" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#6b6560">200</text>
+
+                  <!-- Curves -->
+                  <path class="graph-path" data-order="1" data-leg="leg-1"
+                    d="M 60 230 Q 168 218 275 205 T 490 175"
+                    stroke="#b5533c" stroke-width="3"/>
+                  <circle class="graph-dot" data-order="1" cx="490" cy="175" r="0" fill="#b5533c" opacity="0"/>
+
+                  <path class="graph-path" data-order="2" data-leg="leg-2"
+                    d="M 60 210 Q 168 212 275 209 T 490 207"
+                    stroke="#c9a227" stroke-width="3"/>
+                  <circle class="graph-dot" data-order="2" cx="490" cy="207" r="0" fill="#c9a227" opacity="0"/>
+
+                  <path class="graph-path" data-order="3" data-leg="leg-3"
+                    d="M 60 240 C 120 235 180 210 240 170 C 300 130 360 90 490 55"
+                    stroke="#4a7c7c" stroke-width="3"/>
+                  <circle class="graph-dot" data-order="3" cx="490" cy="55" r="0" fill="#4a7c7c" opacity="0"/>
+
+                  <path class="graph-path" data-order="4" data-leg="leg-4"
+                    d="M 60 260 C 100 258 140 230 180 170 C 220 110 260 70 320 50 C 380 35 440 32 490 30"
+                    stroke="#1a1a18" stroke-width="3" stroke-dasharray="6 4"/>
+                  <circle class="graph-dot" data-order="4" cx="490" cy="30" r="0" fill="#1a1a18" opacity="0"/>
+                </svg>
+              </div>
+
+              <div class="graph-legend">
+                <div class="leg" id="leg-1"><span class="leg-swatch" style="background:#b5533c"></span>Metal wire · PTC</div>
+                <div class="leg" id="leg-2"><span class="leg-swatch" style="background:#c9a227"></span>Carbon film · ~0</div>
+                <div class="leg" id="leg-3"><span class="leg-swatch" style="background:#4a7c7c"></span>Semiconductor · NTC</div>
+                <div class="leg" id="leg-4"><span class="leg-swatch" style="background:#1a1a18"></span>Thermistor · NTC</div>
+              </div>
+            </div>
+
+            <div class="graph-side">
+              <div class="insight-card fragment fade-up"><strong class="accent-rust">Metal</strong> — R climbs roughly linearly. Phonons win.</div>
+              <div class="insight-card fragment fade-up"><strong class="accent-mustard">Carbon</strong> — flattest curve. Competing effects cancel.</div>
+              <div class="insight-card fragment fade-up"><strong class="accent-teal">Semiconductor</strong> — exponential drop as carriers multiply.</div>
+              <div class="insight-card fragment fade-up"><strong>Thermistor</strong> — steepest fall. Built to sense ΔT.</div>
+              <div class="polaroid" style="transform:rotate(-1.5deg);">
+                <div class="polaroid-inner" style="aspect-ratio:16/9;">
+                  <img src="images/slide-6.png" alt="Lab data">
+                  <span class="polaroid-cap">images/slide-6.png</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7 · APPLICATIONS -->
+    <section data-background-color="#f5f1e8">
+      <div class="page">
+        <span class="page-num">07 · Applied</span>
+        <span class="lab-tag">Where It Matters</span>
+
+        <div class="page-body">
+          <h2>Real-World <span class="mark mark-mustard">Applications</span></h2>
+          <span class="sketch-line" style="background:var(--mustard);"></span>
+
+          <div class="split">
+            <div class="app-cards">
+              <div class="app-card teal-card fragment fade-up">
+                <h3 class="accent-teal">Thermistors in Sensors</h3>
+                <ul>
+                  <li class="fragment fade-up">Digital thermometers, HVAC, battery protection — anywhere ΔR/ΔT must be large.</li>
+                  <li class="fragment fade-up">Simple voltage divider → temperature readout, no fancy ADC needed.</li>
+                  <li class="fragment fade-up">3D printer hotends, ovens, medical fever monitors.</li>
+                </ul>
+              </div>
+              <div class="app-card rust-card fragment fade-up">
+                <h3 class="accent-rust">Metal Wires in Precision Resistors</h3>
+                <ul>
+                  <li class="fragment fade-up">Manganin / Constantan wire-wound: tiny α, stable across wide T range.</li>
+                  <li class="fragment fade-up">Wheatstone bridges, calibration standards, precision measurement.</li>
+                  <li class="fragment fade-up">Predictable T drift → correction tables, not compensation circuits.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="polaroid fragment fade-right">
+              <div class="polaroid-inner">
+                <img src="images/slide-7.png" alt="Applications">
+                <span class="polaroid-cap">images/slide-7.png</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8 · SUMMARY -->
+    <section data-background-color="#f5f1e8">
+      <div class="page">
+        <span class="page-num">08 · Wrap</span>
+        <span class="lab-tag">Summary &amp; Viva</span>
+
+        <div class="page-body">
+          <h2>Four Materials, Four Stories</h2>
+          <span class="sketch-line"></span>
+
+          <div class="split">
+            <div>
+              <div class="compare-grid">
+                <div class="compare-cell fragment pop"><strong class="accent-rust">Metal</strong>Phonons scatter e⁻ → R↑ (PTC)</div>
+                <div class="compare-cell fragment pop"><strong class="accent-mustard">Carbon</strong>Grain hopping → R≈const</div>
+                <div class="compare-cell fragment pop"><strong class="accent-teal">Semiconductor</strong>Band-gap carriers → R↓ (NTC)</div>
+                <div class="compare-cell fragment pop"><strong>Thermistor</strong>Engineered NTC → R↓↓</div>
+              </div>
+
+              <div class="viva-scroll">
+                <h3>Likely Viva Questions</h3>
+                <ul>
+                  <li class="fragment fade-up">Why does metal resistance <em>increase</em> with temperature?</li>
+                  <li class="fragment fade-up">Distinguish PTC from NTC — give one example of each.</li>
+                  <li class="fragment fade-up">Why is a thermistor more sensitive than a bulk semiconductor?</li>
+                  <li class="fragment fade-up">Why choose wire-wound resistors for precision work?</li>
+                  <li class="fragment fade-up">Write the Steinhart–Hart / β equation for an NTC thermistor.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="polaroid fragment fade-up">
+              <div class="polaroid-inner">
+                <img src="images/slide-8.png" alt="Summary table">
+                <span class="polaroid-cap">images/slide-8.png</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script>
+  function resetGraph(slide) {
+    slide.querySelectorAll('.graph-path').forEach(function (p) {
+      var len = p.getTotalLength();
+      p.style.transition = 'none';
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+    });
+    slide.querySelectorAll('.graph-dot').forEach(function (d) {
+      d.setAttribute('r', '0');
+      d.style.opacity = '0';
+      d.style.transition = 'none';
+    });
+    slide.querySelectorAll('.leg').forEach(function (l) { l.classList.remove('active'); });
+  }
+
+  function animateGraph(slide) {
+    var paths = [].slice.call(slide.querySelectorAll('.graph-path')).sort(function (a, b) {
+      return (+a.getAttribute('data-order')) - (+b.getAttribute('data-order'));
+    });
+
+    paths.forEach(function (path) {
+      var len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      if (path.getAttribute('stroke-dasharray')) {
+        path.setAttribute('data-dashed', path.getAttribute('stroke-dasharray'));
+      }
+    });
+
+    void slide.offsetWidth;
+
+    paths.forEach(function (path) {
+      var order = +path.getAttribute('data-order') || 1;
+      var delay = (order - 1) * 750;
+      var legId = path.getAttribute('data-leg');
+      var isDashed = path.getAttribute('data-dashed');
+      var dot = slide.querySelector('.graph-dot[data-order="' + order + '"]');
+
+      path.style.transition = 'stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1) ' + delay + 'ms';
+      path.style.strokeDashoffset = '0';
+
+      setTimeout(function () {
+        if (legId) {
+          var leg = slide.querySelector('#' + legId);
+          if (leg) leg.classList.add('active');
+        }
+        if (dot) {
+          dot.style.transition = 'r 0.35s ease, opacity 0.35s ease';
+          dot.setAttribute('r', '5');
+          dot.style.opacity = '1';
+        }
+      }, delay + 1200);
+
+      if (isDashed) {
+        path.addEventListener('transitionend', function fn() {
+          path.removeEventListener('transitionend', fn);
+          path.style.strokeDasharray = isDashed;
+          path.style.strokeDashoffset = '0';
+          path.style.transition = 'none';
+        });
+      }
+    });
+  }
+
+  function handleGraphSlide(slide) {
+    if (!slide || !slide.hasAttribute('data-graph-slide')) return;
+    resetGraph(slide);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { animateGraph(slide); });
+    });
+  }
+
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1100,
+    height: 700,
+    margin: 0.05,
+    minScale: 0.35,
+    maxScale: 1.5
+  }).then(function () {
+    handleGraphSlide(document.querySelector('[data-graph-slide="true"]'));
+  });
+
+  Reveal.on('slidechanged', function (e) {
+    handleGraphSlide(e.currentSlide);
+  });
+
+  /* Show placeholders until each image file actually loads */
+  document.querySelectorAll('.polaroid-inner img').forEach(function (img) {
+    function markLoaded() {
+      img.classList.add('loaded');
+      var wrap = img.closest('.polaroid-inner');
+      if (wrap) wrap.classList.add('loaded');
+    }
+    if (img.complete && img.naturalWidth > 0) markLoaded();
+    else {
+      img.addEventListener('load', markLoaded);
+      img.addEventListener('error', function () {
+        img.classList.remove('loaded');
+        var wrap = img.closest('.polaroid-inner');
+        if (wrap) wrap.classList.remove('loaded');
+      });
+    }
+  });
+</script>
+</body>
+</html>
